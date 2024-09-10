@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Mantenimiento de Máquinas Engel</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Importar Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.2/firebase-firestore.js"></script>
+
+</head>
+<body>
+    <div class="container">
+        <h1>Control de Mantenimiento de Máquinas Engel</h1>
+        <div class="machine-selection">
+            <label for="machine">Seleccionar Máquina:</label>
+            <select id="machine" onchange="updateMachineData()">
+                <option value="1">Máquina 1</option>
+                <option value="2">Máquina 2</option>
+                <option value="2">Máquina 3</option>
+                <option value="2">Máquina 4</option>
+                <option value="2">Máquina 5</option>
+                <option value="2">Máquina 6</option>
+                <option value="2">Máquina 7</option>
+                <option value="2">Máquina 8</option>
+                <option value="2">Máquina 9</option>
+                <option value="2">Máquina 10</option>
+                <option value="2">Máquina 11</option>
+                <option value="2">Máquina 12</option>
+                <option value="2">Máquina 13</option>
+                <option value="2">Máquina 14</option>
+                <!-- Añadir más máquinas si es necesario -->
+            </select>
+        </div>
+
+        <div class="status">
+            <h2>Estado del Mantenimiento</h2>
+            <!-- Secciones de los intervalos de mantenimiento -->
+            <div id="maintenance-1">
+                <h3>Intervalo Mantenimiento 1</h3>
+                <p>Horas trabajadas: <input id="input-hours1" type="number" min="0" /></p>
+                <p>Ciclos completados: <input id="input-cycles" type="number" min="0" /></p>
+                <p>Días restantes: <input id="input-days1" type="number" min="0" /></p>
+            </div>
+
+            <div id="maintenance-2">
+                <h3>Intervalo Mantenimiento 2</h3>
+                <p>Horas trabajadas: <input id="input-hours2" type="number" min="0" /></p>
+            </div>
+
+            <div id="maintenance-3">
+                <h3>Intervalo Mantenimiento 3</h3>
+                <p>Horas trabajadas: <input id="input-hours3" type="number" min="0" /></p>
+            </div>
+
+            <div id="maintenance-4">
+                <h3>Intervalo Mantenimiento 4</h3>
+                <p>Horas trabajadas: <input id="input-hours4" type="number" min="0" /></p>
+            </div>
+        </div>
+
+        <button onclick="saveData()">Guardar Datos</button>
+    </div>
+
+    <script src="scripts.js"></script>
+</body>
+</html>
