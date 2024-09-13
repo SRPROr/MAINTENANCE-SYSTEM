@@ -1,0 +1,39 @@
+/* Estilos para el menú de navegación */
+nav {
+    background: linear-gradient(135deg, #7deb00, #b7fa00); /* bg-gray-800 */
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+nav .menu-container {
+    max-width: 7xl;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav .menu-title {
+    color: rgb(0, 0, 0);
+    font-size: 1.25rem; /* text-xl */
+    font-weight: bold;
+}
+
+nav .menu-links a {
+    color: #000000;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 8px 16px;
+    margin: 0 8px;
+    border-radius: 8px;
+    transition: background 0.3s ease;
+}
+
+nav .menu-links a:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+           
+          

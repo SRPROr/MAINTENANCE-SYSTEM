@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Mantenimiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="menu.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+        .card {
+            background: linear-gradient(135deg, #e2ff93, #f3f4f6);
+            color: #000000;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .header {
+            background: linear-gradient(135deg,  #7deb00, #a5fa44);
+            color: #1f1f1f;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .chart-container canvas {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .machine-card {
+            background: #1f2937;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s ease-in-out;
+            cursor: pointer;
+            min-width: 200px; /* Tamaño mínimo de la tarjeta */
+            max-width: 250px; /* Tamaño máximo de la tarjeta */
+        }
+        .machine-card:hover {
+            transform: translateY(-5px);
+        }
+        .machine-card .machine-name {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .machine-card .machine-status {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .completed {
+            color: #a4eb00;
+        }
+        .incomplete {
+            color: #ff0000ad;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <nav>
+        <div class="menu-container">
+            <div class="menu-title">Mantenimiento</div>
+            <div class="menu-links">
+                <a href="index.html">Menu</a>
+                <a href="intervalos_ins.html">Intervalos de Mantenimiento</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="card mt-6">
+            <h1 class="header text-2xl font-bold mb-6">Estado de Mantenimiento</h1>
+            <!-- Gráficas de estado -->
+            <div class="chart-container mb-6">
+                <canvas id="statusChart"></canvas>
+            </div>
+
+            <!-- Lista de todas las máquinas -->
+            <div id="machineListContainer">
+                <h2 class="text-xl font-bold mb-4">Lista de Máquinas</h2>
+                <div id="machineList" class="flex flex-wrap gap-4 justify-center">
+                    <!-- La lista de máquinas se llenará con JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const supabaseUrl = 'https://kxpqbdoqhzhxfhojfefp.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4cHFiZG9xaHpoeGZob2pmZWZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYwOTQ1NDUsImV4cCI6MjA0MTY3MDU0NX0.RxnE9pzpO0UefvgGUAzbxlmWPQkU_HRYacbuIBdc078';
+            const { createClient } = window.supabase;
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            async function updateStatus() {
+                const { data: machines, error } = await supabase
+                    .from('machines')
+                    .select('*');
+
+                if (error) {
+                    console.error('Error al cargar las máquinas:', error);
+                    return;
+                }
+
+                const totalMachines = machines.length;
+                const completedStatuses = {
+                    completed: 0,
+                    notCompleted: 0
+                };
+
+                const machineData = machines.map(machine => {
+                    const oneYearInHours = 8760;
+                    const lastMaintenanceDate = new Date(machine.ultima_fecha_mantenimiento);
+                    const now = new Date();
+                    const hoursSinceLastMaintenance = (now - lastMaintenanceDate) / (1000 * 60 * 60);
+
+                    const isMaintenanceCompleted = hoursSinceLastMaintenance <= oneYearInHours;
+                    if (isMaintenanceCompleted) {
+                        completedStatuses.completed++;
+                    } else {
+                        completedStatuses.notCompleted++;
+                    }
+
+                    return {
+                        name: machine.nombre_maquina,
+                        status: isMaintenanceCompleted ? 'Completado' : 'Incompleto'
+                    };
+                });
+
+                // Ordenar máquinas: primero las incompletas
+                machineData.sort((a, b) => a.status.localeCompare(b.status));
+
+                const ctx = document.getElementById('statusChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Mantenimiento Completo', 'Mantenimiento Incompleto'],
+                        datasets: [{
+                            data: [completedStatuses.completed, completedStatuses.notCompleted],
+                            backgroundColor: ['#a4eb00', '#ff0000ad'],
+                            borderColor: '#fff',
+                            borderWidth: 2,
+                            hoverBorderColor: '#000'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                labels: {
+                                    color: '#000000',
+                                    font: {
+                                        size: 18
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        const dataset = tooltipItem.dataset;
+                                        const total = dataset.data.reduce((a, b) => a + b, 0);
+                                        const value = dataset.data[tooltipItem.dataIndex];
+                                        const percentage = ((value / total) * 100).toFixed(2);
+                                        return `${value} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                const machineList = document.getElementById('machineList');
+                machineList.innerHTML = ''; 
+                machineData.forEach(machine => {
+                    const card = document.createElement('div');
+                    card.classList.add('machine-card');
+
+                    const name = document.createElement('div');
+                    name.classList.add('machine-name');
+                    name.textContent = machine.name;
+
+                    const status = document.createElement('div');
+                    status.classList.add('machine-status', machine.status === 'Completado' ? 'completed' : 'incomplete');
+                    status.textContent = machine.status;
+
+                    card.appendChild(name);
+                    card.appendChild(status);
+                    machineList.appendChild(card);
+                });
+            }
+
+            updateStatus();
+
+            supabase
+                .from('machines')
+                .on('INSERT', updateStatus)
+                .on('UPDATE', updateStatus)
+                .on('DELETE', updateStatus)
+                .subscribe();
+        });
+    </script>
+</body>
+</html>
