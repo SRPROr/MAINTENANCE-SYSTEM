@@ -132,16 +132,21 @@
                         </div>
                         <div class="form-group">
                             <label for="hoursWorked">Horas trabajadas:</label>
-                            <input type="number" id="hoursWorked" placeholder="Ingrese las horas trabajadas">
+                            <input type="number" id="hoursWorked" placeholder="Ingrese las horas trabajadas" oninput="validateInput(this)">
                         </div>
+                        <script>
+                            function validateInput(input) {
+                                input.value = input.value.replace(/[^0-9]/g, '');
+                            }
+                        </script>
                         <div class="form-group">
                             <label for="cyclesCompleted">Ciclos completados:</label>
-                            <input type="number" id="cyclesCompleted" placeholder="Ingrese los ciclos completados">
+                            <input type="number" id="cyclesCompleted" placeholder="Ingrese los ciclos completados" oninput="validateInput(this)">
                         </div>
                         <div class="form-group">
                             <label for="kilometersTravelled">Kilómetros recorridos:</label>
-                            <input type="number" id="kilometersTravelled" placeholder="Ingrese los kilómetros recorridos">
-                        </div>
+                            <input type="number" id="kilometersTravelled" placeholder="Ingrese los kilómetros recorridos" oninput="validateInput(this)">
+                        </div> 
                         <div class="form-group">
                             <label for="lastMaintenanceDate">Fecha del último mantenimiento:</label>
                             <input type="date" id="lastMaintenanceDate">
@@ -211,7 +216,7 @@
                     loadMachines(); // Cargar la lista de máquinas actualizada
                 }
             }
-    
+            
             // Función para cargar las máquinas desde la base de datos
             async function loadMachines() {
                 const { data: machines, error } = await supabase
@@ -239,15 +244,15 @@
                 const maintenance1Kilometers = 100000; // Ejemplo de kilómetros para el Intervalo 1
                 
                 const interval1Percent = Math.min(
-                    (kilometers / maintenance1Kilometers) * 100,
-                    (cycles / maintenance1Cycles) * 100,
+                   /* (kilometers / maintenance1Kilometers) * 100,
+                    (cycles / maintenance1Cycles) * 100,*/
                     (hours / maintenance1Hours) * 100
                 );
                 
                 const daysUntilNextMaintenance1 = Math.max(0, Math.ceil((maintenance1Hours - hours) / 24));
                 
                 const maintenance2AlarmHours = 1950;
-                const maintenance2WarningHours = 2160;
+                const maintenance2WarningHours =2160;
                 
                 const maintenance2Alarm = hours >= maintenance2AlarmHours && hours < maintenance2WarningHours;
                 
@@ -287,13 +292,13 @@
 
                 let interval;
                 if (maintenance4Alarm) {
-                    interval = 'Intervalo 4';
+                    interval = 'Intervalo4';
                 } else if (maintenance3Alarm) {
-                    interval = 'Intervalo 3';
+                    interval = 'Intervalo3';
                 } else if (maintenance2Alarm) {
-                    interval = 'Intervalo 2';
+                    interval = 'Intervalo2';
                 } else {
-                    interval = 'Intervalo 1';
+                    interval = 'Intervalo1';
                 }
 
                 // Actualizar datos de mantenimiento en la base de datos

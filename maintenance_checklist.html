@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist de Mantenimiento</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="menu.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <style> 
+        .checklist-item {
+            margin-bottom: 10px;
+        }
+        .comentarios {
+            color: black; /* Color del texto en el área de comentarios */
+            background-color: white; /* Fondo blanco para el área de comentarios */
+            border: 1px solid #ccc; /* Borde del área de comentarios */
+            padding: 10px; /* Espaciado interno */
+            border-radius: 5px; /* Bordes redondeados */
+            min-height: 100px; /* Altura mínima */
+            cursor: text; /* Cursor tipo texto */
+        }
+        
+    </style>
+</head>
+<body class="bg-gray-900 text-white p-6">
+    <nav>
+        <div class="menu-container">
+            <div class="menu-title">Mantenimiento</div>
+            <div class="menu-links">
+                <a href="index.html">Menu</a>
+                <a href="status.html">Estado de Mantenimiento</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-4xl mx-auto">
+        <div class="card mt-6">
+            <h1 class="header text-2xl font-bold mb-6">Tareas a realizar</h1>
+            <div id="checklistContainer"></div>
+            <div class="mt-4">
+                <label for="comentarios" class="block text-lg">Comentarios:</label>
+                <textarea id="comentarios" rows="4" class="w-full p-2 border border-gray-300 rounded text-black" placeholder="Escribe tus comentarios aquí..."></textarea>
+
+            </div>
+            <button id="guardarBtn" class="mt-4 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Guardar</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const supabaseUrl = 'https://kxpqbdoqhzhxfhojfefp.supabase.co';
+            const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt4cHFiZG9xaHpoeGZob2pmZWZwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjYwOTQ1NDUsImV4cCI6MjA0MTY3MDU0NX0.RxnE9pzpO0UefvgGUAzbxlmWPQkU_HRYacbuIBdc078';
+            const { createClient } = window.supabase;
+            const supabase = createClient(supabaseUrl, supabaseKey);
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const interval = urlParams.get('interval');
+            const machineId = urlParams.get('machineId'); // Obtener el nombre de la máquina de la URL
+            const checklistContainer = document.getElementById('checklistContainer');
+
+            const intervalChecklists = {
+                Intervalo1: [
+                    'Comprobación visual: Comprobar la hermeticidad y daños en los medios. Comprobar si están dañados los cables y conexiones.',
+                    'Limpieza: Realización de limpieza a máquina, removiendo el exceso de polvo, grasa y aceite afectados por el medio ambiente y tiempo de uso.',
+                    'Equipo de seguridad: Revisión del estado del equipo de seguridad (paros de emergencias, sensores, tapas, etc.)',
+                    'Lubricación central automática: Comprobación visual del nivel de aceite de lubricación.',
+                    'Control visual de residuos: Chequeo de depósitos recolectores de aceite de fuga, si es necesario vaciar el aceite.',
+                    'Rótula: Lubricar la rótula del cilindro de bloqueo.',
+                    'Carro guía: Lubricar carro guía.',
+                    'Carro guía (Unidad de plastificación): Lubricar carro guía sección de unidad de plastificación.',
+                    'Cilindro plastificador: Lubricación del apoyo de cilindro plastificador.'
+                ],
+                Intervalo2: [
+                    'Filtros de aire: Realizar el mantenimiento de los filtros de aire en los armarios de conexión.',
+                    'Muestreo de aceite: Extraer una muestra de aceite y analizarla a través de un suministrador de aceite.',
+                    'Líneas hidráulicas: Comprobación de condiciones de las líneas hidráulicas, que estén en condiciones seguras de trabajo.',
+                    'Líneas de agua de enfriamiento: Revisar las condiciones de las líneas de agua de enfriamiento que estén en condiciones óptimas de trabajo.'
+                ],
+                Intervalo3: [
+                    'Calibración de boquilla: Comprobación de centrado de boquilla.',
+                    'Verificación de presión: Comprobar acumulador de presión.'
+                ],
+                Intervalo4: [
+                    'Verificación de sensores: Comprobar la exactitud de los sensores y máquina.',
+                    'Nivelado de máquina: Comprobar el nivelado de máquina.',
+                    'Cilindro de cerrado: Lubricación de cilindro de cerrado rápido.',
+                    'Lubricación: Lubricación de dispositivo de extracción.',
+                    'Aceite de unidad de inyección: Cambiar el aceite de la unidad plastificadora.',
+                    'Filtro: Cambiar el elemento del filtro.',
+                    'Aceite hidráulico: Cambiar aceite hidráulico (primero se tiene que verificar con proveedor el estado del aceite y reemplazar el filtro de aceite si es necesario).',
+                    'Intercambiador de calor: Limpieza de intercambiador de calor de aceite.',
+                    'Circuito de enfriamiento: Limpieza de filtros de agua de enfriamiento y circuito de enfriamiento.'
+                ]
+            };
+
+            if (interval && intervalChecklists[interval]) {
+                intervalChecklists[interval].forEach((item, index) => {
+                    const checklistItem = document.createElement('div');
+                    checklistItem.classList.add('checklist-item');
+                    checklistItem.innerHTML = `<label><input type="checkbox" name="tarea${index}" value="completado"> ${item}</label>`;
+                    checklistContainer.appendChild(checklistItem);
+                });
+            } else {
+                checklistContainer.textContent = 'Esta maquina no necesita mantenimiento su estado es normal.';
+            }
+
+            document.getElementById('guardarBtn').addEventListener('click', async () => {
+                const checkboxes = checklistContainer.querySelectorAll('input[type="checkbox"]');
+                const comentarios = document.getElementById('comentarios').value;
+                let todasCompletadas = true;
+
+                checkboxes.forEach(checkbox => {
+                    if (!checkbox.checked) {
+                        todasCompletadas = false;
+                    }
+                });
+
+                const estado = todasCompletadas ? 'completado' : 'inacabada';
+
+                // Guardar el estado y comentarios en la base de datos
+                const { data, error } = await supabase
+                    .from('machines')
+                    .update({estado, comentarios }) // Ajusta los nombres de los campos según tu esquema
+                    .eq('id', machineId); // Usa el nombre de la máquina para actualizar
+
+                if (error) {
+                    console.error('Error al guardar los datos:', error);
+                } else {
+                    console.log('Datos guardados:', data);
+                }
+            });
+        });
+    </script>
+</body>
+</html>

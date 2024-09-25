@@ -42,8 +42,8 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             transition: transform 0.2s ease-in-out;
             cursor: pointer;
-            min-width: 200px; /* Tamaño mínimo de la tarjeta */
-            max-width: 250px; /* Tamaño máximo de la tarjeta */
+            min-width: 200px;
+            max-width: 250px;
         }
         .machine-card:hover {
             transform: translateY(-5px);
@@ -60,15 +60,18 @@
         .completed {
             color: #a4eb00;
         }
-        .incomplete {
-            color: #ff0000ad;
+        .maintenance {
+            color: #FFA500; /* Color naranja para el estado de mantenimiento */
+        }
+        .normal {
+            color: #00d5e4; /* Color naranja para el estado de mantenimiento */
         }
     </style>
 </head>
 <body class="bg-gray-900 text-white p-6">
     <nav>
         <div class="menu-container">
-            <div class="menu-title">Mantenimiento</div>
+            <div class="menu-title">ESTADO DE MAQUINARIA</div>
             <div class="menu-links">
                 <a href="index.html">Menu</a>
                 <a href="intervalos_ins.html">Intervalos de Mantenimiento</a>
@@ -90,6 +93,7 @@
                 <div id="machineList" class="flex flex-wrap gap-4 justify-center">
                     <!-- La lista de máquinas se llenará con JavaScript -->
                 </div>
+                
             </div>
         </div>
     </div>
@@ -111,96 +115,58 @@
                     return;
                 }
 
-                const totalMachines = machines.length;
-                const completedStatuses = {
-                    completed: 0,
-                    notCompleted: 0
-                };
-
                 const machineData = machines.map(machine => {
-                    const oneYearInHours = 8760;
-                    const lastMaintenanceDate = new Date(machine.ultima_fecha_mantenimiento);
-                    const now = new Date();
-                    const hoursSinceLastMaintenance = (now - lastMaintenanceDate) / (1000 * 60 * 60);
+        const lastMaintenanceDate = new Date(machine.ultima_fecha_mantenimiento);
+        const now = new Date();
 
-                    const isMaintenanceCompleted = hoursSinceLastMaintenance <= oneYearInHours;
-                    if (isMaintenanceCompleted) {
-                        completedStatuses.completed++;
-                    } else {
-                        completedStatuses.notCompleted++;
-                    }
+        // Cambia el estado a 'Mantenimiento' si se requiere o 'Normal' si no hay ningún intervalo pendiente
+        let status;
+        if (machine.estado === 'completado') {
+            status = 'Completado';
+        } else if (!machine.intervalo_requerido) {
+            status = 'Normal';  // No hay ningún intervalo de mantenimiento requerido
+        } else {
+            status = 'Mantenimiento';  // Si hay algún intervalo que requiere atención
+        }
+        return {
+            id: machine.id,
+            name: machine.nombre_maquina,
+            status: status,
+            interval: machine.intervalo_requerido  // Obtener el intervalo de la base de datos
+        };
+    });
+   
+    machineData.sort((a, b) => a.id - b.id);
+    
+    const machineList = document.getElementById('machineList');
+    machineList.innerHTML = '';  // Limpiar el contenido anterior
+    machineData.forEach(machine => {
+        const card = document.createElement('div');
+        card.classList.add('machine-card');
 
-                    return {
-                        name: machine.nombre_maquina,
-                        status: isMaintenanceCompleted ? 'Completado' : 'Incompleto'
-                    };
-                });
+        card.addEventListener('click', () => {
+            window.location.href = `maintenance_checklist.html?machineId=${machine.id}&interval=${machine.interval}`;
+        });
 
-                // Ordenar máquinas: primero las incompletas
-                machineData.sort((a, b) => a.status.localeCompare(b.status));
+        const name = document.createElement('div');
+        name.classList.add('machine-name');
+        name.textContent = machine.name;
 
-                const ctx = document.getElementById('statusChart').getContext('2d');
-                new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Mantenimiento Completo', 'Mantenimiento Incompleto'],
-                        datasets: [{
-                            data: [completedStatuses.completed, completedStatuses.notCompleted],
-                            backgroundColor: ['#a4eb00', '#ff0000ad'],
-                            borderColor: '#fff',
-                            borderWidth: 2,
-                            hoverBorderColor: '#000'
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                                labels: {
-                                    color: '#000000',
-                                    font: {
-                                        size: 18
-                                    }
-                                }
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(tooltipItem) {
-                                        const dataset = tooltipItem.dataset;
-                                        const total = dataset.data.reduce((a, b) => a + b, 0);
-                                        const value = dataset.data[tooltipItem.dataIndex];
-                                        const percentage = ((value / total) * 100).toFixed(2);
-                                        return `${value} (${percentage}%)`;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                });
+        const status = document.createElement('div');
+        status.classList.add('machine-status', 
+            machine.status === 'Completado' ? 'completed' : 
+            machine.status === 'Normal' ? 'normal' : 'maintenance');
+        status.textContent = machine.status;
 
-                const machineList = document.getElementById('machineList');
-                machineList.innerHTML = ''; 
-                machineData.forEach(machine => {
-                    const card = document.createElement('div');
-                    card.classList.add('machine-card');
-
-                    const name = document.createElement('div');
-                    name.classList.add('machine-name');
-                    name.textContent = machine.name;
-
-                    const status = document.createElement('div');
-                    status.classList.add('machine-status', machine.status === 'Completado' ? 'completed' : 'incomplete');
-                    status.textContent = machine.status;
-
-                    card.appendChild(name);
-                    card.appendChild(status);
-                    machineList.appendChild(card);
-                });
-            }
+        card.appendChild(name);
+        card.appendChild(status);
+        machineList.appendChild(card);
+    });
+}
 
             updateStatus();
 
+            // Actualización en tiempo real
             supabase
                 .from('machines')
                 .on('INSERT', updateStatus)
